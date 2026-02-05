@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Bus Route Tracker</title>
+    <style>
+        /* CSS Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-left h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-left h1 i {
+            color: #ffd600;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .time-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            min-height: 700px;
+        }
+        
+        /* Map Section */
+        .map-section {
+            padding: 30px;
+            border-right: 2px solid #e0e0e0;
+            position: relative;
+        }
+        
+        .map-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            height: 600px;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #e3f2fd;
+        }
+        
+        .campus-map {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+        
+        .location {
+            position: absolute;
+            width: 120px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .location:hover {
+            transform: scale(1.05);
+            border-color: #1a237e;
+        }
+        
+        .location-name {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            color: #1a237e;
+        }
+        
+        .location-buses {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        /* Bus Stops */
+        .main-gate { top: 10%; left: 5%; }
+        .library { top: 20%; left: 30%; }
+        .admin-block { top: 15%; left: 60%; }
+        .cafeteria { top: 40%; left: 20%; }
+        .science-block { top: 35%; left: 50%; }
+        .hostel-area { top: 60%; left: 10%; }
+        .sports-complex { top: 55%; left: 40%; }
+        .auditorium { top: 70%; left: 70%; }
+        .parking-lot { top: 85%; left: 30%; }
+        
+        /* Bus Routes */
+        .route {
+            position: absolute;
+            height: 8px;
+            background: rgba(30, 136, 229, 0.7);
+            border-radius: 4px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        
+        /* Bus Icons */
+        .bus {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: #1a237e;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            transition: all 0.5s ease;
+            cursor: pointer;
+            border: 3px solid #ffd600;
+        }
+        
+        .bus:hover {
+            transform: scale(1.2);
+            z-index: 100;
+        }
+        
+        .bus::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.3) 50%, transparent 70%);
+            animation: shine 2s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            padding: 30px;
+            background: #f8f9fa;
+            overflow-y: auto;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #1a237e;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #ffd600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            color: #1a237e;
+        }
+        
+        /* Bus List */
+        .bus-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .bus-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 5px solid #1a237e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .bus-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .bus-card.active {
+            background: #e3f2fd;
+            border-left-color: #ffd600;
+        }
+        
+        .bus-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .bus-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #1a237e;
+        }
+        
+        .bus-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .status-arriving { background: #e8f5e9; color: #2e7d32; }
+        .status-delayed { background: #ffebee; color: #c62828; }
+        .status-ontime { background: #e3f2fd; color: #1565c0; }
+        .status-departed { background: #f5f5f5; color: #616161; }
+        
+        .bus-route {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .bus-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #1a237e;
+            font-weight: 500;
+        }
+        
+        .next-stop {
+            font-size: 0.85rem;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1a237e;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .control-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .refresh-btn {
+            background: #1a237e;
+            color: white;
+        }
+        
+        .refresh-btn:hover {
+            background: #283593;
+        }
+        
+        .auto-update-btn {
+            background: #ffd600;
+            color: #1a237e;
+        }
+        
+        .auto-update-btn:hover {
+            background: #ffca28;
+        }
+        
+        .auto-update-btn.active {
+            background: #4caf50;
+            color: white;
+        }
+        
+        /* Footer */
+        footer {
+            background: #1a237e;
+            color: white;
+            padding: 25px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .footer-info {
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+        
+        .update-time {
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .map-container {
+                height: 500px;
+            }
+            
+            .sidebar {
+                border-top: 2px solid #e0e0e0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+            
+            .header-left h1 {
+                font-size: 2rem;
+            }
+            
+            .map-container {
+                height: 400px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            footer {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+        }
+        
+        /* Bus Details Modal */
+        .bus-details {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 90%;
+            max-width: 500px;
+            display: none;
+        }
+        
+        .bus-details.active {
+            display: block;
+            animation: modalSlide 0.3s ease;
+        }
+        
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1><i class="fas fa-bus"></i> College Bus Tracker</h1>
+                <p class="subtitle">Real-time tracking of all campus shuttle buses</p>
+            </div>
+            <div class="time-display" id="currentTime">
+                Loading...
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <!-- Map Section -->
+            <div class="map-section">
+                <h2 class="section-title"><i class="fas fa-map-marked-alt"></i> Campus Map</h2>
+                <div class="map-container">
+                    <div class="campus-map">
+                        <!-- Routes -->
+                        <div class="route" id="route1" style="width: 300px; top: 15%; left: 5%; transform: rotate(30deg);"></div>
+                        <div class="route" id="route2" style="width: 250px; top: 25%; left: 30%; transform: rotate(45deg);"></div>
+                        <div class="route" id="route3" style="width: 350px; top: 50%; left: 15%; transform: rotate(15deg);"></div>
+                        
+                        <!-- Locations -->
+                        <div class="location main-gate">
+                            <div class="location-name">Main Gate</div>
+                            <div class="location-buses">Buses: 3</div>
+                        </div>
+                        <div class="location library">
+                            <div class="location-name">Library</div>
+                            <div class="location-buses">Buses: 1</div>
+                        </div>
+                        <div class="location admin-block">
+                            <div class="location-name">Admin Block</div>
+                            <div class="location-buses">Buses: 2</div>
+                        </div>
+                        <div class="location cafeteria">
+                            <div class="location-name">Cafeteria</div>
+                            <div class="location-buses">Buses: 4</div>
+                        </div>
+                        <div class="location science-block">
+                            <div class="location-name">Science Block</div>
+                            <div class="location-buses">Buses: 2</div>
+                        </div>
+                        <div class="location hostel-area">
+                            <div class="location-name">Hostel Area</div>
+                            <div class="location-buses">Buses: 5</div>
+                        </div>
+                        <div class="location sports-complex">
+                            <div class="location-name">Sports Complex</div>
+                            <div class="location-buses">Buses: 1</div>
+                        </div>
+                        <div class="location auditorium">
+                            <div class="location-name">Auditorium</div>
+                            <div class="location-buses">Buses: 1</div>
+                        </div>
+                        <div class="location parking-lot">
+                            <div class="location-name">Parking Lot</div>
+                            <div class="location-buses">Buses: 3</div>
+                        </div>
+                        
+                        <!-- Buses (Positioned by JavaScript) -->
+                        <div class="bus" id="bus101" data-bus="101" style="top: 12%; left: 8%;">
+                            101
+                        </div>
+                        <div class="bus" id="bus102" data-bus="102" style="top: 22%; left: 32%;">
+                            102
+                        </div>
+                        <div class="bus" id="bus103" data-bus="103" style="top: 38%; left: 22%;">
+                            103
+                        </div>
+                        <div class="bus" id="bus104" data-bus="104" style="top: 58%; left: 12%;">
+                            104
+                        </div>
+                        <div class="bus" id="bus105" data-bus="105" style="top: 72%; left: 25%;">
+                            105
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h2 class="section-title"><i class="fas fa-route"></i> Active Buses</h2>
+                
+                <div class="bus-list" id="busList">
+                    <!-- Bus cards will be generated by JavaScript -->
+                </div>
+                
+                <h2 class="section-title"><i class="fas fa-chart-bar"></i> Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="activeBuses">5</div>
+                        <div class="stat-label">Active Buses</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalStops">9</div>
+                        <div class="stat-label">Bus Stops</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avgWait">8</div>
+                        <div class="stat-label">Avg Wait (min)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">96%</div>
+                        <div class="stat-label">On Time Rate</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn refresh-btn" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="control-btn auto-update-btn" id="autoUpdateBtn">
+                        <i class="fas fa-play"></i> Auto-Update
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <div class="footer-info">
+                <p><i class="fas fa-university"></i> University College Campus Bus System</p>
+                <p><i class="fas fa-phone"></i> Transport Office: (123) 456-7890</p>
+            </div>
+            <div class="update-time">
+                Last Updated: <span id="lastUpdate">--:--:--</span>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Bus Details Modal -->
+    <div class="overlay" id="overlay"></div>
+    <div class="bus-details" id="busDetails">
+        <h2 style="color: #1a237e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-bus"></i> Bus <span id="detailBusNumber">101</span>
+        </h2>
+        
+        <div class="detail-item">
+            <h3 style="color: #666; margin-bottom: 10px;">Current Status</h3>
+            <div class="bus-status status-ontime" id="detailStatus">On Time</div>
+        </div>
+        
+        <div class="detail-item" style="margin: 20px 0;">
+            <h3 style="color: #666; margin-bottom: 10px;">Current Location</h3>
+            <p style="font-size: 1.2rem; color: #1a237e; font-weight: bold;" id="detailLocation">Main Gate</p>
+        </div>
+        
+        <div class="detail-item">
+            <h3 style="color: #666; margin-bottom: 10px;">Route</h3>
+            <p style="color: #555;" id="detailRoute">Main Gate → Library → Admin Block → Cafeteria → Hostel Area</p>
+        </div>
+        
+        <div class="detail-item" style="margin: 20px 0;">
+            <h3 style="color: #666; margin-bottom: 10px;">Next Stop</h3>
+            <p style="font-size: 1.1rem; color: #1a237e; font-weight: bold;" id="detailNextStop">Library (ETA: 5 min)</p>
+        </div>
+        
+        <div class="detail-item">
+            <h3 style="color: #666; margin-bottom: 10px;">Capacity</h3>
+            <div style="background: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div id="capacityBar" style="height: 100%; background: #4caf50; width: 65%;"></div>
+            </div>
+            <p style="text-align: center; margin-top: 5px;" id="capacityText">65% Full (26/40 seats)</p>
+        </div>
+        
+        <button onclick="closeDetails()" style="margin-top: 25px; width: 100%; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;">
+            Close Details
+        </button>
+    </div>
+
+    <script>
+        // JavaScript Code
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('College Bus Tracker loaded');
+            
+            // Initialize variables
+            let autoUpdateInterval = null;
+            let isAutoUpdate = false;
+            let currentTime = document.getElementById('currentTime');
+            let lastUpdate = document.getElementById('lastUpdate');
+            let activeBuses = document.getElementById('activeBuses');
+            let busList = document.getElementById('busList');
+            let refreshBtn = document.getElementById('refreshBtn');
+            let autoUpdateBtn = document.getElementById('autoUpdateBtn');
+            let overlay = document.getElementById('overlay');
+            let busDetails = document.getElementById('busDetails');
+            
+            // Bus data
+            const busData = [
+                {
+                    number: "101",
+                    route: "Main Gate → Library → Admin Block → Cafeteria",
+                    location: "Main Gate",
+                    nextStop: "Library",
+                    status: "arriving",
+                    eta: "3 min",
+                    capacity: 65,
+                    color: "#1a237e",
+                    position: { x: 8, y: 12 }
+                },
+                {
+                    number: "102",
+                    route: "Hostel Area → Sports Complex → Auditorium",
+                    location: "Library",
+                    nextStop: "Admin Block",
+                    status: "ontime",
+                    eta: "8 min",
+                    capacity: 45,
+                    color: "#283593",
+                    position: { x: 32, y: 22 }
+                },
+                {
+                    number: "103",
+                    route: "Science Block → Cafeteria → Parking Lot",
+                    location: "Cafeteria",
+                    nextStop: "Parking Lot",
+                    status: "delayed",
+                    eta: "12 min",
+                    capacity: 80,
+                    color: "#3949ab",
+                    position: { x: 22, y: 38 }
+                },
+                {
+                    number: "104",
+                    route: "Full Campus Loop",
+                    location: "Hostel Area",
+                    nextStop: "Sports Complex",
+                    status: "ontime",
+                    eta: "5 min",
+                    capacity: 30,
+                    color: "#5c6bc0",
+                    position: { x: 12, y: 58 }
+                },
+                {
+                    number: "105",
+                    route: "Parking Lot → Admin Block → Main Gate",
+                    location: "Parking Lot",
+                    nextStop: "Admin Block",
+                    status: "departed",
+                    eta: "15 min",
+                    capacity: 55,
+                    color: "#7986cb",
+                    position: { x: 25, y: 72 }
+                }
+            ];
+            
+            // Initialize the application
+            function initApp() {
+                updateTime();
+                generateBusCards();
+                updateBusPositions();
+                updateLastUpdateTime();
+                
+                // Set up auto-update every 30 seconds
+                startAutoUpdate();
+            }
+            
+            // Update current time
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                const dateString = now.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                currentTime.innerHTML = `<i class="far fa-clock"></i> ${timeString} • ${dateString}`;
+            }
+            
+            // Update last update time
+            function updateLastUpdateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                lastUpdate.textContent = timeString;
+            }
+            
+            // Generate bus cards for sidebar
+            function generateBusCards() {
+                busList.innerHTML = '';
+                
+                busData.forEach(bus => {
+                    const statusClass = `status-${bus.status}`;
+                    const statusText = getStatusText(bus.status);
+                    
+                    const busCard = document.createElement('div');
+                    busCard.className = 'bus-card';
+                    busCard.setAttribute('data-bus', bus.number);
+                    
+                    busCard.innerHTML = `
+                        <div class="bus-header">
+                            <div class="bus-number">Bus ${bus.number}</div>
+                            <div class="bus-status ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="bus-route">${bus.route}</div>
+                        <div class="bus-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            Currently at: ${bus.location}
+                        </div>
+                        <div class="next-stop">
+                            Next: ${bus.nextStop} (ETA: ${bus.eta})
+                        </div>
+                    `;
+                    
+                    busCard.addEventListener('click', function() {
+                        showBusDetails(bus.number);
+                    });
+                    
+                    busList.appendChild(busCard);
+                });
+            }
+            
+            // Get status text
+            function getStatusText(status) {
+                const statusMap = {
+                    'arriving': 'Arriving Soon',
+                    'ontime': 'On Time',
+                    'delayed': 'Delayed',
+                    'departed': 'Departed'
+                };
+                return statusMap[status] || status;
+            }
+            
+            // Update bus positions on map
+            function updateBusPositions() {
+                busData.forEach(bus => {
+                    const busElement = document.getElementById(`bus${bus.number}`);
+                    if (busElement) {
+                        // Add slight random movement to simulate real movement
+                        const randomX = Math.random() * 2 - 1;
+                        const randomY = Math.random() * 2 - 1;
+                        
+                        const newX = Math.max(2, Math.min(95, bus.position.x + randomX));
+                        const newY = Math.max(2, Math.min(95, bus.position.y + randomY));
+                        
+                        busElement.style.left = `${newX}%`;
+                        busElement.style.top = `${newY}%`;
+                        
+                        // Update position in data
+                        bus.position.x = newX;
+                        bus.position.y = newY;
+                        
+                        // Update bus color based on capacity
+                        if (bus.capacity > 80) {
+                            busElement.style.background = '#c62828'; // Red for full
+                        } else if (bus.capacity > 60) {
+                            busElement.style.background = '#f57c00'; // Orange for busy
+                        } else {
+                            busElement.style.background = bus.color;
+                        }
+                    }
+                });
+                
+                // Update location bus counts
+                updateLocationCounts();
+            }
+            
+            // Update bus counts at each location
+            function updateLocationCounts() {
+                const locations = [
+                    'main-gate', 'library', 'admin-block', 'cafeteria', 
+                    'science-block', 'hostel-area', 'sports-complex', 
+                    'auditorium', 'parking-lot'
+                ];
+                
+                locations.forEach(location => {
+                    const element = document.querySelector(`.${location}`);
+                    if (element) {
+                        // Generate random count for demo
+                        const randomCount = Math.floor(Math.random() * 4) + 1;
+                        element.querySelector('.location-buses').textContent = `Buses: ${randomCount}`;
+                    }
+                });
+            }
+            
+            // Show bus details modal
+            function showBusDetails(busNumber) {
+                const bus = busData.find(b => b.number === busNumber);
+                if (!bus) return;
+                
+                // Update modal content
+                document.getElementById('detailBusNumber').textContent = bus.number;
+                document.getElementById('detailStatus').textContent = getStatusText(bus.status);
+                document.getElementById('detailStatus').className = `bus-status status-${bus.status}`;
+                document.getElementById('detailLocation').textContent = bus.location;
+                document.getElementById('detailRoute').textContent = bus.route;
+                document.getElementById('detailNextStop').textContent = `${bus.nextStop} (ETA: ${bus.eta})`;
+                document.getElementById('capacityBar').style.width = `${bus.capacity}%`;
+                document.getElementById('capacityText').textContent = `${bus.capacity}% Full (${Math.floor(bus.capacity * 40 / 100)}/40 seats)`;
+                
+                // Show modal
+                overlay.classList.add('active');
+                busDetails.classList.add('active');
+                
+                // Highlight the selected bus on map
+                highlightBus(busNumber, true);
+                
+                // Highlight the bus card
+                document.querySelectorAll('.bus-card').forEach(card => {
+                    card.classList.remove('active');
+                    if (card.getAttribute('data-bus') === busNumber) {
+                        card.classList.add('active');
+                    }
+                });
+            }
+            
+            // Close bus details modal
+            function closeDetails() {
+                overlay.classList.remove('active');
+                busDetails.classList.remove('active');
+                
+                // Remove highlight from bus
+                highlightBus('', false);
+            }
+            
+            // Highlight a bus on the map
+            function highlightBus(busNumber, highlight) {
+                const busElement = document.getElementById(`bus${busNumber}`);
+                if (busElement) {
+                    if (highlight) {
+                        busElement.style.transform = 'scale(1.3)';
+                        busElement.style.zIndex = '1000';
+                        busElement.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.8)';
+                    } else {
+                        busElement.style.transform = '';
+                        busElement.style.zIndex = '';
+                        busElement.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
+                    }
+                }
+            }
+            
+            // Refresh bus data
+            function refreshData() {
+                console.log('Refreshing bus data...');
+                
+                // Simulate data update
+                busData.forEach(bus => {
+                    // Randomly change some statuses
+                    if (Math.random() > 0.7) {
+                        const statuses = ['arriving', 'ontime', 'delayed', 'departed'];
+                        bus.status = statuses[Math.floor(Math.random() * statuses.length)];
+                    }
+                    
+                    // Update ETA
+                    bus.eta = `${Math.floor(Math.random() * 15) + 2} min`;
+                    
+                    // Update capacity
+                    bus.capacity = Math.floor(Math.random() * 40) + 20;
+                });
+                
+                updateBusPositions();
+                generateBusCards();
+                updateLastUpdateTime();
+                
+                // Show refresh animation
+                refreshBtn.innerHTML = '<i class="fas fa-check"></i> Refreshed!';
+                setTimeout(() => {
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                }, 1500);
+            }
+            
+            // Toggle auto-update
+            function toggleAutoUpdate() {
+                if (isAutoUpdate) {
+                    stopAutoUpdate();
+                    autoUpdateBtn.innerHTML = '<i class="fas fa-play"></i> Auto-Update';
+                    autoUpdateBtn.classList.remove('active');
+                } else {
+                    startAutoUpdate();
+                    autoUpdateBtn.innerHTML = '<i class="fas fa-pause"></i> Auto-Updating';
+                    autoUpdateBtn.classList.add('active');
+                }
+                isAutoUpdate = !isAutoUpdate;
+            }
+            
+            // Start auto-update
+            function startAutoUpdate() {
+                if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+                autoUpdateInterval = setInterval(() => {
+                    refreshData();
+                }, 30000); // Update every 30 seconds
+            }
+            
+            // Stop auto-update
+            function stopAutoUpdate() {
+                if (autoUpdateInterval) {
+                    clearInterval(autoUpdateInterval);
+                    autoUpdateInterval = null;
+                }
+            }
+            
+            // Event Listeners
+            refreshBtn.addEventListener('click', refreshData);
+            autoUpdateBtn.addEventListener('click', toggleAutoUpdate);
+            overlay.addEventListener('click', closeDetails);
+            
+            // Add click event to bus icons on map
+            document.querySelectorAll('.bus').forEach(busIcon => {
+                busIcon.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const busNumber = this.getAttribute('data-bus');
+                    showBusDetails(busNumber);
+                });
+            });
+            
+            // Update time every second
+            setInterval(updateTime, 1000);
+            
+            // Initialize app
+            initApp();
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDetails();
+                }
+                if (e.key === 'r' || e.key === 'R') {
+                    refreshData();
+                }
+                if (e.key === 'a' || e.key === 'A') {
+                    toggleAutoUpdate();
+                }
+            });
+            
+            // Console message
+            console.log('%c🚌 College Bus Tracker Ready!', 'color: #1a237e; font-size: 16px; font-weight: bold;');
+            console.log('%cPress R to refresh, A to toggle auto-update, ESC to close details', 'color: #666;');
+        });
+    </script>
+</body>
+</html>
